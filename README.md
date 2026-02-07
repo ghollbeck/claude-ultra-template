@@ -39,8 +39,8 @@ A self-orchestrating agent framework for long-running Claude Code sessions. Prov
 ### Step 1: Clone this repo
 
 ```bash
-git clone https://github.com/YOUR_ORG/85_CLAUDE_CODE_ULTRA.git
-cd 85_CLAUDE_CODE_ULTRA
+git clone https://github.com/ghollbeck/claude-ultra-template.git
+cd claude-ultra-template
 ```
 
 ### Step 2: Set up environment variables
