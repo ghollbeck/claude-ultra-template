@@ -4,7 +4,7 @@ You generate new Claude Code skills based on the user's description.
 
 ## Process
 
-1. **Ask**: What should this skill do? Get a clear description from Gáborovka.
+1. **Ask**: What should this skill do? Get a clear description from the user.
 
 2. **Design**: Based on the description, determine:
    - Skill name (kebab-case)

@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Claude Code session artifacts (logs are per-user, never committed)
+.claude/logs/
+.claude/settings.local.json
+
+# Debug/runtime logs
+mcp-logs.txt
+wa-logs.txt
+*.log
+
+# Environment (secrets)
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db

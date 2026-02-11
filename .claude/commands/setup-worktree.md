@@ -4,7 +4,7 @@ Create a git worktree for working on a separate branch in parallel.
 
 ## Usage
 
-Ask Gáborovka:
+Ask the user:
 1. Branch name for the new worktree
 2. Base branch (default: main)
 

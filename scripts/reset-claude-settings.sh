@@ -41,12 +41,12 @@ cat > "$HOME/.claude/settings.json" << 'SETTINGS'
     "deny": []
   },
   "mcpServers": {
-    "supabase-latexassistant": {
+    "supabase": {
       "transport": "stdio",
       "command": "npx",
       "args": ["-y", "@supabase/mcp-server-supabase@latest"],
       "env": {
-        "SUPABASE_PROJECT_REF": "rwkduugxjvzrniomfjri",
+        "SUPABASE_PROJECT_REF": "${SUPABASE_PROJECT_REF}",
         "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
       }
     },
@@ -72,7 +72,7 @@ cat > "$HOME/.claude/settings.json" << 'SETTINGS'
     "perplexity": {
       "transport": "stdio",
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-perplexity"],
+      "args": ["-y", "@perplexity-ai/mcp-server"],
       "env": {
         "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
         "PERPLEXITY_TIMEOUT_MS": "600000"
@@ -81,12 +81,12 @@ cat > "$HOME/.claude/settings.json" << 'SETTINGS'
     "puppeteer": {
       "transport": "stdio",
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-puppeteer"]
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
     },
     "slack": {
       "transport": "stdio",
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-slack"],
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
       "env": {
         "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
         "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
@@ -120,6 +120,7 @@ echo "  Settings Reset Complete!"
 echo "============================================"
 echo ""
 echo "IMPORTANT: Environment variables needed in ~/.zshenv:"
+echo "  export SUPABASE_PROJECT_REF='your-project-ref'"
 echo "  export SUPABASE_ACCESS_TOKEN='your-token'"
 echo "  export RENDER_API_KEY='your-token'"
 echo "  export GITHUB_TOKEN='your-github-pat'"

@@ -1,63 +1,97 @@
 # Claude Code Ultra
 
-A self-orchestrating agent framework for long-running Claude Code sessions. Provides predefined agents, skills, hooks, slash commands, and MCP integrations — deploy once, use everywhere.
+A self-orchestrating agent framework for long-running Claude Code sessions. Predefined agents, skills, hooks, slash commands, and MCP integrations — deploy to any project with one command.
 
 ---
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Quick Install](#quick-install)
-3. [Deploying to a Project](#deploying-to-a-project)
-4. [What Gets Installed](#what-gets-installed)
-5. [Slash Commands](#slash-commands)
-6. [Agents](#agents)
-7. [MCP Tools](#mcp-tools)
-8. [Hooks](#hooks)
-9. [Prompting Guide](#prompting-guide)
-10. [Working with Prompt Trails](#working-with-prompt-trails)
+1. [Quick Start](#quick-start)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Deploying to a Project](#deploying-to-a-project)
+5. [What Gets Deployed](#what-gets-deployed)
+6. [Usage](#usage)
+   - [Slash Commands](#slash-commands)
+   - [Prompting Guide](#prompting-guide)
+   - [Working with Prompt Trails](#working-with-prompt-trails)
+7. [Agents](#agents)
+8. [MCP Tools](#mcp-tools)
+   - [WhatsApp MCP (Separate Setup)](#whatsapp-mcp-separate-setup--local-only)
+9. [Hooks](#hooks)
+10. [tmux Sessions](#tmux-sessions)
 11. [Git Worktrees](#git-worktrees)
-12. [tmux Sessions](#tmux-sessions)
-13. [Plugins](#plugins)
-14. [Resetting Settings](#resetting-settings)
-15. [File Structure](#file-structure)
-16. [Customization](#customization)
+12. [Plugins (Optional)](#plugins-optional)
+13. [Resetting Settings](#resetting-settings)
+14. [Customization](#customization)
+15. [Settings Hierarchy](#settings-hierarchy)
+16. [Repository Structure](#repository-structure)
+
+---
+
+## Quick Start
+
+```bash
+# 1. Clone
+git clone https://github.com/ghollbeck/claude-ultra-template.git
+cd claude-ultra-template
+
+# 2. Deploy to your project
+./setup.sh /path/to/your/project
+
+# 3. Start coding
+cd /path/to/your/project
+claude
+```
+
+Inside Claude Code, you now have access to all agents, commands, and skills:
+
+```
+/prompt-trail-creator    Plan a complex task
+/fresh-eyes              Validate all changes
+/create-skill            Generate a new skill
+```
 
 ---
 
 ## Prerequisites
 
-- **Claude Code CLI** (v2.1+) — [Install docs](https://docs.anthropic.com/en/docs/claude-code)
-- **Node.js** (v18+) — Required for MCP servers (`npx`)
-- **tmux** (optional) — `brew install tmux`
-- **jq** (optional, for reset script) — `brew install jq`
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (v2.1+)
+- [Node.js](https://nodejs.org/) (v18+) — required for MCP servers via `npx`
+- macOS or Linux
+
+**Optional:**
+- `tmux` — `brew install tmux` (for multi-window terminal sessions)
+- `jq` — `brew install jq` (used by the settings reset script)
 
 ---
 
-## Quick Install
+## Installation
 
-### Step 1: Clone this repo
+### Step 1: Clone the template
 
 ```bash
-git clone https://github.com/YOUR_ORG/85_CLAUDE_CODE_ULTRA.git
-cd 85_CLAUDE_CODE_ULTRA
+git clone https://github.com/ghollbeck/claude-ultra-template.git
 ```
+
+You can clone it anywhere. All scripts resolve paths relative to their own location.
 
 ### Step 2: Set up environment variables
 
-Copy the template and fill in your API keys:
+Check what's needed:
 
 ```bash
 cat claude-ultra-template/.env.template
 ```
 
-Add them to your shell profile (`~/.zshenv` or `~/.bashrc`):
+Add your keys to `~/.zshenv` (or `~/.bashrc`):
 
 ```bash
-# Required
-export GITHUB_TOKEN="ghp_your_github_token"
+# GitHub (required for GitHub MCP)
+export GITHUB_TOKEN="ghp_your_token"
 
-# Optional (for specific MCPs)
+# Optional — only needed if you use these MCPs
+export SUPABASE_PROJECT_REF="your-project-ref"
 export SUPABASE_ACCESS_TOKEN="your-supabase-token"
 export RENDER_API_KEY="your-render-key"
 export PERPLEXITY_API_KEY="pplx-your-key"
@@ -65,22 +99,13 @@ export SLACK_BOT_TOKEN="xoxb-your-slack-token"
 export SLACK_TEAM_ID="T01234567"
 ```
 
-Then reload: `source ~/.zshenv`
+Reload your shell: `source ~/.zshenv`
 
-### Step 3: Configure global MCP servers
+### Step 3: Configure global settings
 
-Copy the MCP configuration to your global Claude settings:
+**Permissions** — create or update `~/.claude/settings.json`:
 
-```bash
-# Create or update ~/.claude/mcp.json with your MCP servers.
-# See the "MCP Tools" section below for the full configuration.
-```
-
-### Step 4: Set global permissions
-
-```bash
-# Create or update ~/.claude/settings.json:
-cat > ~/.claude/settings.json << 'EOF'
+```json
 {
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
@@ -93,86 +118,83 @@ cat > ~/.claude/settings.json << 'EOF'
     "deny": []
   }
 }
-EOF
 ```
 
-### Step 5: Deploy to your project
+**MCPs** — create or update `~/.claude/mcp.json` (see [MCP Tools](#mcp-tools) for the full config). MCPs are configured globally so they're available in every project.
+
+### Step 4: Deploy to your project
 
 ```bash
-./claude-ultra-template/setup.sh /path/to/your/project
+./setup.sh /path/to/your/project
 ```
 
-### Step 6 (optional): Install plugins
-
-If you have the [claude-plugins](https://github.com/2389-research/claude-plugins) repo cloned as a sibling directory:
-
-```bash
-./claude-ultra-template/scripts/install-plugins.sh
-```
+Done. Open Claude Code in that project and everything is ready.
 
 ---
 
 ## Deploying to a Project
 
-The setup script copies the full `.claude/` configuration and `CLAUDE.md` into any project:
-
 ```bash
-# Deploy to an existing project
-./claude-ultra-template/setup.sh /path/to/project
+# Existing project
+./setup.sh /path/to/project
 
-# Deploy to a new project
-mkdir /path/to/new-project
-./claude-ultra-template/setup.sh /path/to/new-project
+# New project
+mkdir /path/to/new-project && ./setup.sh /path/to/new-project
 
-# Deploy with a git worktree
-./claude-ultra-template/setup.sh /path/to/project --worktree feature/my-feature
+# With git worktree
+./setup.sh /path/to/project --worktree feature/my-feature
 ```
 
-**What the setup script does:**
-1. Copies `.claude/agents/`, `.claude/commands/`, `.claude/skills/` (always updates)
-2. Copies `.claude/hooks/` (only new hooks, won't overwrite existing)
-3. Copies `.claude/settings.json` (only if not present)
-4. Copies `CLAUDE.md` (only if not present)
-5. Creates `.claude/logs/` directory structure
-6. Adds `.claude/logs/` to `.gitignore`
-7. Makes all hooks executable
+**What `setup.sh` does:**
 
-**Safe to re-run** — it merges, never overwrites your customizations.
+| Step | Action | Overwrites? |
+|------|--------|-------------|
+| 1 | Copies `.claude/agents/`, `.claude/commands/`, `.claude/skills/` | Yes (always updates) |
+| 2 | Copies `.claude/hooks/*.sh` | No (only new hooks) |
+| 3 | Copies `.claude/settings.json` | No (only if missing) |
+| 4 | Copies `CLAUDE.md` | No (only if missing) |
+| 5 | Creates `.claude/logs/` directories | Creates if missing |
+| 6 | Adds `.claude/logs/` to `.gitignore` | Appends if not present |
+| 7 | Makes hooks executable | Always |
+
+**Safe to re-run.** It merges — never overwrites your project-specific customizations in hooks, settings, or CLAUDE.md.
 
 ---
 
-## What Gets Installed
+## What Gets Deployed
+
+After running `setup.sh`, your project gets:
 
 ```
 your-project/
-├── CLAUDE.md                          # Project instructions for Claude
+├── CLAUDE.md                              # Project instructions for Claude
 └── .claude/
-    ├── settings.json                  # Hooks configuration
-    ├── agents/                        # 9 specialist agents
-    │   ├── backend-dev.md
-    │   ├── frontend-dev.md
-    │   ├── debug.md
-    │   ├── reviewer.md
-    │   ├── integration-check.md
-    │   ├── code-sentinel.md
-    │   ├── archivist.md
-    │   ├── fresh-eyes.md
-    │   └── mermaid-architect.md
-    ├── commands/                       # 5 slash commands
-    │   ├── prompt-trail-creator.md
-    │   ├── fresh-eyes.md
-    │   ├── create-skill.md
-    │   ├── reset-settings.md
-    │   └── setup-worktree.md
-    ├── skills/                         # 2 auto-detected skills
+    ├── settings.json                      # Hook configurations
+    ├── agents/                            # 9 specialist agents
+    │   ├── archivist.md                   #   Logging & knowledge management
+    │   ├── backend-dev.md                 #   Python/FastAPI specialist
+    │   ├── code-sentinel.md               #   Security audit (report-only)
+    │   ├── debug.md                       #   Deep-dive debugging
+    │   ├── fresh-eyes.md                  #   Final validation (zero context)
+    │   ├── frontend-dev.md                #   TypeScript/React specialist
+    │   ├── integration-check.md           #   Code wiring verification
+    │   ├── mermaid-architect.md           #   Mermaid diagram generation
+    │   └── reviewer.md                    #   Code quality review
+    ├── commands/                           # 5 slash commands
+    │   ├── prompt-trail-creator.md        #   THE main planning command
+    │   ├── fresh-eyes.md                  #   Run validation review
+    │   ├── create-skill.md                #   Generate new skills
+    │   ├── reset-settings.md              #   Reset to defaults
+    │   └── setup-worktree.md              #   Create git worktree
+    ├── skills/                             # 2 auto-detected skills
     │   ├── prompt-trail-creator/SKILL.md
     │   └── create-agent-skills/SKILL.md
-    ├── hooks/                          # 4 event hooks
-    │   ├── session-start.sh
-    │   ├── pre-tool-use.sh
-    │   ├── post-tool-use.sh
-    │   └── subagent-stop.sh
-    └── logs/                           # Centralized logging (gitignored)
+    ├── hooks/                              # 4 event hooks
+    │   ├── session-start.sh               #   Terminal title + session log
+    │   ├── pre-tool-use.sh                #   Security gate
+    │   ├── post-tool-use.sh               #   Edit audit trail
+    │   └── subagent-stop.sh               #   Agent completion tracking
+    └── logs/                               # Centralized logging (gitignored)
         ├── sessions/
         ├── agents/
         ├── progress/
@@ -182,65 +204,161 @@ your-project/
 
 ---
 
-## Slash Commands
+## Usage
 
-Use these inside Claude Code by typing the command name:
+### Slash Commands
+
+Type these inside Claude Code:
 
 | Command | What It Does |
 |---------|-------------|
-| `/prompt-trail-creator` | Interactive 3-phase workflow: explores your codebase, asks clarifying questions, then generates a numbered prompt trail with agent assignments, tool selections, and validation steps per step. **Start here for any non-trivial task.** |
-| `/fresh-eyes` | Spawns the `@fresh-eyes` agent to review all changes with zero prior context. Runs tests, reads git diff, checks logs, screenshots UI. Returns APPROVED / NEEDS_FIXES / MAJOR_ISSUES. |
-| `/create-skill` | Generates a new Claude Code skill on demand. Asks what it should do, designs the structure, creates SKILL.md files, and installs them. |
+| `/prompt-trail-creator` | Interactive 3-phase workflow: (1) explores codebase, (2) asks clarifying questions, (3) generates numbered prompt trail files with agent assignments, tool selections, and validation steps. **Start here for any non-trivial task.** |
+| `/fresh-eyes` | Spawns the `@fresh-eyes` agent with zero prior context. Runs tests, reads git diff, checks logs, screenshots UI. Returns APPROVED / NEEDS_FIXES / MAJOR_ISSUES. |
+| `/create-skill` | Generates a new Claude Code skill interactively. Asks what it should do, designs the file structure, creates SKILL.md files, and installs them. |
 | `/reset-settings` | Nuclear reset of Claude settings to template defaults. Backs up current settings first. Use when configs get corrupted. |
 | `/setup-worktree` | Creates a git worktree for parallel branch work. Copies Claude config into the new worktree automatically. |
 
----
+### Prompting Guide
 
-## Agents
+**Quick tasks** — just describe what you need:
 
-Agents are specialist subagents spawned via the `Task` tool. Each has a defined scope and output format.
+```
+Fix the 500 error on the /api/users endpoint.
+```
+```
+Add a dark mode toggle to the settings page.
+```
+```
+Write tests for the authentication middleware.
+```
 
-| Agent | Scope | When to Use | Key Behavior |
-|-------|-------|-------------|-------------|
-| `backend-dev` | Python/FastAPI | Any backend code changes | Creates Alembic migrations, writes pytest tests, uses Supabase MCP |
-| `frontend-dev` | TypeScript/React | Any frontend code changes | Tailwind + custom CSS, uses Puppeteer for visual verification |
-| `debug` | Bug investigation | Persistent bugs, failing tests | Max 5 attempts with hypothesis tracking (Ralph Wiggum pattern). Escalates if stuck. |
-| `reviewer` | Code review | Before merging | CRITICAL/HIGH/MEDIUM/LOW/NITPICK findings. Review-only, never modifies code. |
-| `integration-check` | Wiring verification | After creating new files | Detects ORPHANED_FILE, DEAD_IMPORT, MISSING_EXPORT, CIRCULAR_RISK |
-| `code-sentinel` | Security audit | Auth code, user input, APIs | OWASP Top 10 + FastAPI-specific + frontend-specific checks. Report-only. |
-| `archivist` | Logging | Progress tracking, session notes | Manages `.claude/logs/` with naming conventions and agent counter |
-| `fresh-eyes` | Final validation | End of long tasks (auto) or manual | Zero prior context. Runs tests, reads diff, screenshots UI, comprehensive checklist. |
-| `mermaid-architect` | Diagrams | Architecture docs, task summaries | Generates Mermaid diagrams: architecture, data flow, component, task flow |
+Claude selects the right agent automatically.
 
-### How agents are used
+**Complex tasks** — use the prompt trail creator:
 
-Claude automatically uses agents when you invoke slash commands or when a prompt trail step specifies one. You can also reference them directly:
+```
+/prompt-trail-creator
+```
+
+Then describe your task. It will explore your code, ask questions, and generate a step-by-step plan.
+
+**Validation** — run anytime:
+
+```
+/fresh-eyes
+```
+
+Runs automatically at the end of long prompt trails.
+
+**Debugging** — structured investigation:
 
 ```
 Use the @debug agent to investigate why the login endpoint returns 500.
 ```
 
+Max 5 attempts with hypothesis tracking. Escalates if stuck.
+
+**Security review** — report-only:
+
 ```
+Run @code-sentinel on the authentication module.
+```
+
+**Architecture diagrams** — Mermaid output:
+
+```
+Use @mermaid-architect to diagram the current system architecture.
+```
+
+### Working with Prompt Trails
+
+Prompt trails are the core workflow for complex, multi-file tasks.
+
+**What they are:** Numbered markdown files, each containing instructions for one agent to execute one step. They form a linked list — each step points to the next.
+
+**Where they live:** `.claude/logs/prompt-trails/YYYY-MM-DD_topic/`
+
+**Structure:**
+
+```
+.claude/logs/prompt-trails/2025-02-07_user-dashboard/
+├── 00_masterplan.md      # Goal, components, agent pipeline, success criteria
+├── 01_backend-api.md     # @backend-dev: create API endpoints
+├── 02_database.md        # @backend-dev: create migrations
+├── 03_frontend-ui.md     # @frontend-dev: build UI components
+├── 04_integration.md     # @integration-check: verify wiring
+├── 05_review.md          # @reviewer: check code quality
+└── 06_validation.md      # @fresh-eyes: final validation + @mermaid-architect diagram
+```
+
+**Each step file specifies:**
+- Agent assignment (which agent runs this step)
+- Dependencies (which steps must complete first)
+- Implementation instructions (specific enough to execute without ambiguity)
+- Files to create/modify (exact paths)
+- Validation commands (test commands to verify the step)
+- Commit message template
+- Next step pointer
+
+**Running a trail:**
+
+```
+Read .claude/logs/prompt-trails/2025-02-07_user-dashboard/00_masterplan.md
+and execute the trail starting from step 01.
+```
+
+Or one step at a time:
+
+```
+Execute step 03 from .claude/logs/prompt-trails/2025-02-07_user-dashboard/03_frontend-ui.md
+```
+
+---
+
+## Agents
+
+Specialist subagents, each with a defined scope and output format:
+
+| Agent | Scope | Key Behavior |
+|-------|-------|-------------|
+| `backend-dev` | Python/FastAPI | Creates Alembic migrations, writes pytest tests, uses Supabase MCP |
+| `frontend-dev` | TypeScript/React | Tailwind + custom CSS, uses Puppeteer for visual verification |
+| `debug` | Bug investigation | Max 5 attempts with hypothesis tracking (Ralph Wiggum pattern). Escalates if stuck. |
+| `reviewer` | Code review | CRITICAL/HIGH/MEDIUM/LOW/NITPICK findings. Review-only — never modifies code. |
+| `integration-check` | Wiring verification | Detects ORPHANED_FILE, DEAD_IMPORT, MISSING_EXPORT, CIRCULAR_RISK |
+| `code-sentinel` | Security audit | OWASP Top 10 + framework-specific checks. Report-only — never modifies code. |
+| `archivist` | Logging | Manages `.claude/logs/` with naming conventions and sequential agent counter |
+| `fresh-eyes` | Final validation | Zero prior context. Runs tests, reads diff, screenshots UI. |
+| `mermaid-architect` | Diagrams | Architecture, data flow, component, and task flow Mermaid diagrams |
+
+**Invoke agents directly:**
+
+```
+Use the @debug agent to investigate why tests are failing.
 Run @integration-check on the files I just created.
+Run @code-sentinel on the authentication module.
 ```
+
+Or let the prompt trail creator assign them automatically.
 
 ---
 
 ## MCP Tools
 
-These are configured globally in `~/.claude/mcp.json` and available in every project.
+Configure these globally in `~/.claude/mcp.json` so they're available in every project:
 
-| MCP | What It Does | Example Usage |
-|-----|-------------|---------------|
-| **Supabase** | Database operations, auth management | "Query the users table", "Create a migration" |
-| **DeepWiki** | Documentation lookup for libraries | "How does FastAPI dependency injection work?" |
-| **Render** | Deployment management | "Deploy the latest commit", "Check service status" |
-| **GitHub** | PRs, issues, repo operations | "Create a PR for this branch", "List open issues" |
-| **Perplexity** | Web search and research | "Find the latest React 19 migration guide" |
-| **Puppeteer** | Browser automation, screenshots | "Screenshot the login page", "Click the submit button" |
-| **Slack** | Team notifications | "Post a status update to #dev" |
+| MCP | Purpose | Example Prompt |
+|-----|---------|----------------|
+| **Supabase** | Database, auth | "Query the users table" |
+| **DeepWiki** | Library docs | "How does FastAPI dependency injection work?" |
+| **Render** | Deployment | "Deploy the latest commit" |
+| **GitHub** | PRs, issues | "Create a PR for this branch" |
+| **Perplexity** | Web research | "Find the latest React 19 migration guide" |
+| **Puppeteer** | Browser automation | "Screenshot the login page" |
+| **Slack** | Notifications | "Post status update to #dev" |
 
-### MCP Configuration
+<details>
+<summary><strong>Full MCP configuration (click to expand)</strong></summary>
 
 Add to `~/.claude/mcp.json`:
 
@@ -296,165 +414,84 @@ Add to `~/.claude/mcp.json`:
 }
 ```
 
+</details>
+
+All MCPs are optional. The framework works without them — they just add capabilities.
+
+### WhatsApp MCP (Separate Setup — Local Only)
+
+The WhatsApp MCP is **not included** in the global `setup-mcps.sh` script. It connects to your personal WhatsApp account via the Baileys library and must be configured **per-project** (local scope only, never global).
+
+**Why separate?** It holds your WhatsApp session credentials locally and should only be active in projects where you explicitly want WhatsApp access.
+
+#### Step 1: Clone and build
+
+```bash
+git clone https://github.com/jlucaso1/whatsapp-mcp-ts.git
+cd whatsapp-mcp-ts
+npm install
+```
+
+#### Step 2: Pair with WhatsApp
+
+```bash
+npx tsx src/main.ts
+```
+
+On first run, it shows a QR code. Scan it with WhatsApp on your phone (Linked Devices > Link a Device). Credentials are saved to `./auth_info/` — subsequent runs reconnect automatically.
+
+#### Step 3: Register as project-local MCP
+
+In the project where you want WhatsApp access:
+
+```bash
+claude mcp add whatsapp -s project -- node /path/to/whatsapp-mcp-ts/src/main.ts
+```
+
+Or add manually to your **project's** `.claude/mcp.json` (not the global one):
+
+```json
+{
+  "mcpServers": {
+    "whatsapp": {
+      "command": "node",
+      "args": ["/path/to/whatsapp-mcp-ts/src/main.ts"],
+      "timeout": 15
+    }
+  }
+}
+```
+
+#### Step 4: Add security guardrails to CLAUDE.md
+
+The template `CLAUDE.md` already includes WhatsApp security rules. Update the allowed recipient number in your project's `CLAUDE.md`:
+
+```markdown
+# WhatsApp MCP — Security
+- Send messages ONLY to: `+1XXXXXXXXXX`  ← your allowed number
+```
+
+This ensures Claude can only message the number you specify — never anyone else.
+
 ---
 
 ## Hooks
 
-Hooks fire automatically on Claude Code events. They're configured in `.claude/settings.json`.
+Fire automatically on Claude Code events. Configured in `.claude/settings.json`:
 
-| Hook | Event | What It Does |
-|------|-------|-------------|
-| `session-start.sh` | SessionStart | Sets terminal title (emoji + project + date), creates session log file |
-| `pre-tool-use.sh` | PreToolUse (Edit/Write/Bash) | Security gate: blocks hook modification, `rm -rf /`, `chmod 777`, `eval()` |
-| `post-tool-use.sh` | PostToolUse (Edit/Write) | Logs every file edit to `.claude/logs/.edit-log.jsonl` |
-| `subagent-stop.sh` | SubagentStop | Tracks agent completion, increments the agent counter |
-
----
-
-## Prompting Guide
-
-### For quick tasks (< 30 minutes)
-
-Just tell Claude what you need. The right agent is selected automatically.
-
-```
-Fix the 500 error on the /api/users endpoint.
-```
-
-```
-Add a dark mode toggle to the settings page.
-```
-
-```
-Write tests for the authentication middleware.
-```
-
-### For complex tasks (multi-file, multi-step)
-
-Start with the prompt trail creator:
-
-```
-/prompt-trail-creator
-```
-
-It will:
-1. **Explore** your codebase to understand the current state
-2. **Ask** you 2-5 clarifying questions
-3. **Present** an architecture plan with agent assignments
-4. **Generate** numbered prompt trail files in `.claude/logs/prompt-trails/`
-
-Then execute the trail:
-
-```
-Run step 01 from the prompt trail at .claude/logs/prompt-trails/2025-02-07_user-dashboard/01_backend-api.md
-```
-
-### For validation
-
-Run fresh eyes manually anytime:
-
-```
-/fresh-eyes
-```
-
-Or it runs automatically at the end of long-running prompt trails.
-
-### For debugging
-
-```
-Use the @debug agent to investigate: [describe the problem]
-```
-
-The debug agent uses a structured hypothesis-testing loop with max 5 attempts before escalating.
-
-### For security review
-
-```
-Run @code-sentinel on the authentication module.
-```
-
-Reports findings only. Never modifies code.
-
-### For architecture diagrams
-
-```
-Use @mermaid-architect to diagram the current system architecture.
-```
-
----
-
-## Working with Prompt Trails
-
-Prompt trails are the core workflow for complex tasks. They live in `.claude/logs/prompt-trails/`.
-
-### Structure
-
-```
-.claude/logs/prompt-trails/2025-02-07_user-dashboard/
-├── 00_masterplan.md        # Overview: goal, components, agent pipeline, success criteria
-├── 01_backend-api.md       # Step 1: @backend-dev creates API endpoints
-├── 02_database.md          # Step 2: @backend-dev creates migrations
-├── 03_frontend-ui.md       # Step 3: @frontend-dev builds UI components
-├── 04_integration.md       # Step 4: @integration-check verifies wiring
-├── 05_review.md            # Step 5: @reviewer checks code quality
-├── 06_validation.md        # Step 6: @fresh-eyes final validation + @mermaid-architect diagram
-```
-
-### Each step file contains
-
-- **Agent assignment** — which agent executes this step
-- **Dependencies** — which steps must be complete first
-- **Implementation instructions** — specific enough to execute without ambiguity
-- **Files to create/modify** — exact paths and what to do
-- **Validation commands** — test commands to verify the step worked
-- **Commit message** — enforce atomic commits
-- **Next step pointer** — linked list to the next file
-
-### Running a prompt trail
-
-```
-Read .claude/logs/prompt-trails/2025-02-07_user-dashboard/00_masterplan.md and execute the trail starting from step 01.
-```
-
-Or step by step:
-
-```
-Execute step 01 from .claude/logs/prompt-trails/2025-02-07_user-dashboard/01_backend-api.md
-```
-
----
-
-## Git Worktrees
-
-For parallel work on multiple branches:
-
-```
-# Inside Claude Code
-/setup-worktree
-
-# Or from terminal
-./claude-ultra-template/scripts/create-worktree.sh feature/user-dashboard main
-```
-
-This creates:
-- A new worktree at `../your-project-feature-user-dashboard/`
-- A fresh copy of `.claude/` configuration in the worktree
-- Independent `.claude/logs/` (separate from main)
-- A new branch off the base branch
-
-Start Claude in the worktree:
-
-```bash
-cd ../your-project-feature-user-dashboard
-claude
-```
+| Hook | Trigger | What It Does |
+|------|---------|-------------|
+| `session-start.sh` | SessionStart | Sets terminal title with emoji + project + date. Creates session log file. |
+| `pre-tool-use.sh` | PreToolUse (Edit, Write, Bash) | Security gate: blocks hook file modification, `rm -rf /`, `chmod 777`, `eval()`. |
+| `post-tool-use.sh` | PostToolUse (Edit, Write) | Appends every file edit to `.claude/logs/.edit-log.jsonl` for audit trail. |
+| `subagent-stop.sh` | SubagentStop | Logs agent completion event. Increments sequential agent counter. |
 
 ---
 
 ## tmux Sessions
 
 ```bash
-./claude-ultra-template/scripts/setup-tmux.sh my-project
+./scripts/setup-tmux.sh my-project
 ```
 
 Creates a tmux session with 4 named windows:
@@ -464,147 +501,130 @@ Creates a tmux session with 4 named windows:
 | 0 | claude | Main Claude Code session |
 | 1 | terminal | General terminal commands |
 | 2 | tests | Running test suites |
-| 3 | server | Dev server (frontend/backend) |
+| 3 | server | Dev server |
 
-**Keyboard shortcuts:**
-- `Ctrl+B` then `0-3` — switch windows
-- `Ctrl+B` then `d` — detach session
-- `tmux attach -t claude-my-project` — reattach
+Switch windows: `Ctrl+B` then `0`-`3`. Detach: `Ctrl+B` then `d`. Reattach: `tmux attach -t claude-my-project`.
 
 ---
 
-## Plugins
+## Git Worktrees
 
-Optional plugins from [2389-research/claude-plugins](https://github.com/2389-research/claude-plugins). Clone the repo as a sibling directory, then run:
+Work on multiple branches in parallel, each with its own Claude config:
 
 ```bash
-./claude-ultra-template/scripts/install-plugins.sh
+# Inside Claude Code
+/setup-worktree
+
+# Or from terminal
+./scripts/create-worktree.sh feature/user-dashboard main
 ```
 
-**Core plugins installed:**
+Creates a worktree at `../your-project-feature-user-dashboard/` with a full `.claude/` copy and independent logs. Start Claude there with:
+
+```bash
+cd ../your-project-feature-user-dashboard && claude
+```
+
+---
+
+## Plugins (Optional)
+
+Extra skills from [2389-research/claude-plugins](https://github.com/2389-research/claude-plugins).
+
+Clone it as a **sibling directory** of this template, then run the installer:
+
+```bash
+# From the parent directory of claude-ultra-template:
+git clone https://github.com/2389-research/claude-plugins.git
+cd claude-ultra-template
+./scripts/install-plugins.sh
+```
+
+**Plugins installed:**
 
 | Plugin | What It Does |
 |--------|-------------|
 | `terminal-title` | Auto-updates terminal title with emoji + project + topic |
 | `fresh-eyes-review` | Pre-commit validation skill |
-| `documentation-audit` | Verifies docs match codebase reality |
+| `documentation-audit` | Verifies docs match codebase |
 | `scenario-testing` | Test-driven development with real dependencies |
 | `css-development` | CSS workflows with Tailwind composition |
 | `better-dev` | General development best practices |
 | `building-multiagent-systems` | Multi-agent coordination patterns |
+| `ceo-personal-os` | CEO productivity frameworks |
+| `product-launcher` | Product launch materials generation |
 
-**Personal plugins (optional):**
-
-| Plugin | What It Does |
-|--------|-------------|
-| `ceo-personal-os` | CEO productivity frameworks and coaching |
-| `product-launcher` | Launch materials generation for products |
+Plugins install to `~/.claude/skills/` (globally available).
 
 ---
 
 ## Resetting Settings
 
-When settings get corrupted or overwritten:
+When configs get corrupted or overwritten:
 
 ```bash
 # Inside Claude Code
 /reset-settings
 
 # Or from terminal
-./claude-ultra-template/scripts/reset-claude-settings.sh
+./scripts/reset-claude-settings.sh
 ```
 
-This:
-1. Backs up current `~/.claude/settings.json` with timestamp
-2. Restores global settings (permissions, env vars)
-3. Backs up and restores project `.claude/settings.json` (hooks)
-4. Makes hooks executable again
-
----
-
-## File Structure
-
-```
-claude-ultra-template/
-├── README.md                          # This file
-├── CLAUDE.md                          # Master project instructions template
-├── setup.sh                           # Main setup script (deploy to any project)
-├── .env.template                      # Environment variable template
-├── .claude/
-│   ├── settings.json                  # Hook configuration
-│   ├── agents/                        # 9 specialist agent definitions
-│   │   ├── archivist.md               # Logging & knowledge management
-│   │   ├── backend-dev.md             # Python/FastAPI specialist
-│   │   ├── code-sentinel.md           # Security audit (report-only)
-│   │   ├── debug.md                   # Deep-dive debugging
-│   │   ├── fresh-eyes.md              # Final validation review
-│   │   ├── frontend-dev.md            # TypeScript/React specialist
-│   │   ├── integration-check.md       # Code wiring verification
-│   │   ├── mermaid-architect.md       # Diagram generation
-│   │   └── reviewer.md               # Code quality review
-│   ├── commands/                      # 5 slash commands
-│   │   ├── prompt-trail-creator.md    # THE main planning command
-│   │   ├── fresh-eyes.md             # Run validation review
-│   │   ├── create-skill.md           # Generate new skills
-│   │   ├── reset-settings.md         # Reset to defaults
-│   │   └── setup-worktree.md         # Create git worktree
-│   ├── skills/                        # Auto-detected skills
-│   │   ├── prompt-trail-creator/
-│   │   │   └── SKILL.md
-│   │   └── create-agent-skills/
-│   │       └── SKILL.md
-│   └── hooks/                         # Event hooks
-│       ├── session-start.sh           # Terminal title + session log
-│       ├── pre-tool-use.sh            # Security gate
-│       ├── post-tool-use.sh           # Edit audit trail
-│       └── subagent-stop.sh           # Agent tracking
-└── scripts/
-    ├── setup-tmux.sh                  # tmux session creator
-    ├── install-plugins.sh             # Plugin installer
-    ├── reset-claude-settings.sh       # Settings reset (terminal)
-    └── create-worktree.sh             # Git worktree creator
-```
+This backs up current settings (timestamped), restores global permissions and MCP configs, restores project hooks, and makes hook scripts executable again.
 
 ---
 
 ## Customization
 
-### Editing CLAUDE.md
+### CLAUDE.md — What to Personalize
 
-The `CLAUDE.md` file is the master instruction set for Claude. After deploying to a project, edit the project's copy to:
+The `CLAUDE.md` template defines Claude's behavior: tech stack, conventions, agent roster, logging rules, commit protocol. After deploying, edit the **project copy** to match your stack. The template never overwrites an existing project `CLAUDE.md`.
 
-- Change the tech stack section to match your project
-- Add project-specific conventions
-- Adjust the agent roster (add/remove agents)
-- Modify logging conventions
+**You MUST customize these sections after deploying:**
 
-The template copy won't overwrite an existing project `CLAUDE.md`.
+| Section | What to Change | Example in Template |
+|---------|---------------|---------------------|
+| **Names & nicknames** | Replace with your own names/aliases. Claude uses these to address you. | `"Gáborovka"` (casual), `"Gabriel Mayflower"` (formal), `"Mr. Rosengarten"` (delivering work) |
+| **Our Relationship** | Update the personality description to match your working style | `"Gáborovka is smart, but not infallible..."` |
+| **Tech Stack** | Change to your actual stack (language, framework, DB, deployment) | Python/FastAPI + TypeScript/React + Supabase + Render |
+| **WhatsApp allowed number** | If using WhatsApp MCP, set your allowed recipient number | `WHATSAPP_ALLOWED_RECIPIENT` env var reference |
 
-### Adding agents
+**Quick find-and-replace after deploy:**
 
-Create a new `.md` file in `.claude/agents/`:
+```bash
+# In your project's CLAUDE.md, replace these placeholders:
+# "Gáborovka"         → your casual nickname
+# "Gabriel Mayflower" → your formal name
+# "Mr. Rosengarten"   → your completion-delivery name
+```
+
+Everything else (git protocol, agent roster, logging rules, decision framework) works out of the box and only needs editing if your workflow differs.
+
+### Adding a new agent
+
+Create `.claude/agents/my-agent.md`:
 
 ```markdown
-# Agent Name — Description
+# My Agent — Description
 
 You are a specialist in [domain].
 
 ## Rules
-1. [Rule 1]
-2. [Rule 2]
+1. [Constraint 1]
+2. [Constraint 2]
 
 ## Output Format
-[Define expected output structure]
+[Expected structure]
 ```
 
-### Adding skills
+### Adding a new skill (auto-detected)
 
 Create `.claude/skills/my-skill/SKILL.md`:
 
 ```markdown
 ---
 name: my-skill
-description: Keywords that trigger auto-detection
+description: Trigger keywords for auto-detection
 ---
 
 # My Skill
@@ -618,53 +638,79 @@ description: Keywords that trigger auto-detection
 
 Or use `/create-skill` inside Claude Code to generate one interactively.
 
-### Adding slash commands
+### Adding a new slash command
 
 Create `.claude/commands/my-command.md`:
 
 ```markdown
-# /my-command — Description
+# /my-command — Short description
 
 [Instructions for Claude when this command is invoked]
 ```
 
-### Modifying hooks
+### Editing hooks
 
-Hooks are in `.claude/hooks/`. The pre-tool-use hook blocks modification of hook files for safety. To edit hooks:
-
-1. Edit them directly from terminal (not via Claude Code)
-2. Or use `/reset-settings` to restore defaults first
-
----
-
-## Logging
-
-All logs go to `.claude/logs/` (gitignored). This directory is created by the setup script.
-
-| Directory | Contents | Naming |
-|-----------|----------|--------|
-| `sessions/` | Session start/end notes | `YYYY-MM-DD_HHMM_session.md` |
-| `agents/` | Individual agent run logs | `agent-NNN_YYYY-MM-DD_type_topic.md` |
-| `progress/` | Task progress tracking | `YYYY-MM-DD_topic_progress.md` |
-| `reviews/` | Code review and audit results | `YYYY-MM-DD_review-type_topic.md` |
-| `prompt-trails/` | Generated implementation plans | `YYYY-MM-DD_topic/00_masterplan.md` |
-
-The agent counter (`.claude/logs/.agent-counter`) tracks sequential agent numbers across sessions.
+The pre-tool-use hook blocks modification of hook files from inside Claude Code (security). To edit hooks, either:
+1. Edit directly from your terminal/editor
+2. Run `/reset-settings` to restore defaults first
 
 ---
 
 ## Settings Hierarchy
 
-Claude Code reads settings from multiple locations, in order:
+Claude Code reads from multiple locations:
 
 | File | Scope | Contains |
 |------|-------|----------|
-| `~/.claude/settings.json` | Global (all projects) | Permissions, env vars |
-| `~/.claude/mcp.json` | Global (all projects) | MCP server configurations |
-| `project/.claude/settings.json` | Project-specific | Hook configurations |
-| `project/CLAUDE.md` | Project-specific | Instructions, conventions, agent roster |
+| `~/.claude/settings.json` | Global | Permissions, env vars |
+| `~/.claude/mcp.json` | Global | MCP server configs |
+| `project/.claude/settings.json` | Per-project | Hook configurations |
+| `project/CLAUDE.md` | Per-project | Instructions, conventions, agent roster |
 
-**Key rule:** MCPs go in `~/.claude/mcp.json` only (global). Hooks go in project `.claude/settings.json` only (per-project).
+**Rule of thumb:** MCPs in `mcp.json` (global, available everywhere). Hooks in project `settings.json` (per-project). Never mix them.
+
+---
+
+## Repository Structure
+
+```
+claude-ultra-template/
+├── README.md                    # This file
+├── CLAUDE.md                    # Master project instructions template
+├── CLAUDE_HarperReed.md         # Alternative CLAUDE.md example (Harper Reed style)
+├── setup.sh                     # Deploy to any project (portable)
+├── .env.template                # Environment variable reference
+├── .gitignore                   # Git exclusions
+├── .claude/
+│   ├── settings.json            # Hook configuration
+│   ├── agents/                  # 9 specialist agents
+│   ├── commands/                # 5 slash commands
+│   ├── skills/                  # 2 auto-detected skills
+│   └── hooks/                   # 4 event hooks
+└── scripts/
+    ├── setup-mcps.sh            # Register MCP servers via claude CLI
+    ├── install-to-project.sh    # Alternative installer (agents, skills, hooks only)
+    ├── setup-tmux.sh            # tmux session creator
+    ├── install-plugins.sh       # Plugin installer (needs claude-plugins sibling)
+    ├── reset-claude-settings.sh # Settings reset from terminal
+    └── create-worktree.sh       # Git worktree creator
+```
+
+---
+
+## Logging
+
+All logs go to `.claude/logs/` in the deployed project (gitignored):
+
+| Directory | Contents | Naming Pattern |
+|-----------|----------|----------------|
+| `sessions/` | Session start/end notes | `YYYY-MM-DD_HHMM_session.md` |
+| `agents/` | Individual agent logs | `agent-NNN_YYYY-MM-DD_type_topic.md` |
+| `progress/` | Task progress | `YYYY-MM-DD_topic_progress.md` |
+| `reviews/` | Code reviews, audits | `YYYY-MM-DD_review-type_topic.md` |
+| `prompt-trails/` | Implementation plans | `YYYY-MM-DD_topic/00_masterplan.md` |
+
+Agent counter (`.claude/logs/.agent-counter`) tracks sequential agent numbers across sessions — never resets.
 
 ---
 

@@ -1,6 +1,6 @@
 # Backend Development Agent
 
-You are a specialist Python/FastAPI backend developer working for Gáborovka.
+You are a specialist Python/FastAPI backend developer working for the user.
 
 ## Constraints
 

@@ -12,7 +12,7 @@ Before generating anything, you MUST:
    - Check for existing tests, CI config, deployment setup
    - Read the current CLAUDE.md and any existing prompt trails
 
-2. **Ask Gáborovka clarifying questions** (2-5 questions max):
+2. **Ask the user clarifying questions** (2-5 questions max):
    - Present proposed answer options (don't make them think too hard)
    - Focus on: scope, priority, constraints, acceptance criteria
    - Ask about integration points with existing code

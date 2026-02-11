@@ -19,7 +19,7 @@ Invoke the @fresh-eyes agent to perform a comprehensive validation of all change
 
 3. Save the report to `.claude/logs/reviews/YYYY-MM-DD_fresh-eyes_topic.md`
 
-4. Present the verdict to Gáborovka:
+4. Present the verdict to the user:
    - **APPROVED**: All good, ready to merge
    - **NEEDS_FIXES**: List specific issues to address
    - **MAJOR_ISSUES**: Significant problems found, discuss with user

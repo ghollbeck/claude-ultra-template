@@ -3,7 +3,7 @@
 # Claude Code Ultra — Project Setup Script
 # ============================================================================
 # Usage:
-#   ./setup.sh /path/to/project [--worktree branch-name]
+#   ~/claude-ultra-template/setup.sh /path/to/project [--worktree branch-name]
 #
 # What it does:
 #   1. Copies .claude/ config into the target project
@@ -16,7 +16,6 @@
 
 set -e
 
-# Resolve template dir from script location (works when cloned anywhere)
 TEMPLATE_DIR="$(cd "$(dirname "$0")" && pwd)"
 TARGET_DIR="${1:-.}"
 WORKTREE_BRANCH=""
@@ -108,6 +107,16 @@ fi
 # Make hooks executable
 echo ">>> Making hooks executable..."
 chmod +x "$TARGET_DIR/.claude/hooks/"*.sh 2>/dev/null || true
+
+# Register MCPs globally (only on first run, checks if already done)
+MCP_MARKER="$HOME/.claude/.mcps-registered"
+if [ ! -f "$MCP_MARKER" ]; then
+  echo ">>> Registering MCP servers (first-time setup)..."
+  "$TEMPLATE_DIR/scripts/setup-mcps.sh" 2>/dev/null || echo "    (MCP registration skipped — run scripts/setup-mcps.sh manually)"
+  touch "$MCP_MARKER"
+else
+  echo ">>> MCPs already registered (delete ~/.claude/.mcps-registered to re-run)"
+fi
 
 # Add .claude/logs/ to .gitignore if not present
 if [ -f "$TARGET_DIR/.gitignore" ]; then
