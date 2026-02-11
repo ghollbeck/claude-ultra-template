@@ -441,6 +441,9 @@ Add to `~/.claude/mcp.json`:
 
 </details>
 
+i think before claude sees the mcps, you either have to resatart claude or even run claude mcp list or claude /mcp
+
+
 All MCPs are optional. The framework works without them — they just add capabilities.
 
 ### WhatsApp MCP (Separate Setup — Local Only)
