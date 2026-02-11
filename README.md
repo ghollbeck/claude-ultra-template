@@ -6,26 +6,43 @@ A self-orchestrating agent framework for long-running Claude Code sessions. Pred
 
 ## Table of Contents
 
-1. [Quick Start](#quick-start)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-4. [Deploying to a Project](#deploying-to-a-project)
-5. [What Gets Deployed](#what-gets-deployed)
-6. [Usage](#usage)
-   - [Slash Commands](#slash-commands)
-   - [Prompting Guide](#prompting-guide)
-   - [Working with Prompt Trails](#working-with-prompt-trails)
-7. [Agents](#agents)
-8. [MCP Tools](#mcp-tools)
-   - [WhatsApp MCP (Separate Setup)](#whatsapp-mcp-separate-setup--local-only)
-9. [Hooks](#hooks)
-10. [tmux Sessions](#tmux-sessions)
-11. [Git Worktrees](#git-worktrees)
-12. [Plugins (Optional)](#plugins-optional)
-13. [Resetting Settings](#resetting-settings)
-14. [Customization](#customization)
-15. [Settings Hierarchy](#settings-hierarchy)
-16. [Repository Structure](#repository-structure)
+- [Claude Code Ultra](#claude-code-ultra)
+  - [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+    - [Step 1: Clone the template](#step-1-clone-the-template)
+    - [Step 2: Set up environment variables](#step-2-set-up-environment-variables)
+    - [Step 3: Configure global settings](#step-3-configure-global-settings)
+    - [Step 4: Deploy to your project](#step-4-deploy-to-your-project)
+  - [Deploying to a Project](#deploying-to-a-project)
+  - [What Gets Deployed](#what-gets-deployed)
+  - [Usage](#usage)
+    - [Slash Commands](#slash-commands)
+    - [Prompting Guide](#prompting-guide)
+    - [Working with Prompt Trails](#working-with-prompt-trails)
+  - [Agents](#agents)
+  - [MCP Tools](#mcp-tools)
+    - [WhatsApp MCP (Separate Setup — Local Only)](#whatsapp-mcp-separate-setup--local-only)
+      - [Step 1: Clone and build](#step-1-clone-and-build)
+      - [Step 2: Pair with WhatsApp](#step-2-pair-with-whatsapp)
+      - [Step 3: Register as project-local MCP](#step-3-register-as-project-local-mcp)
+      - [Step 4: Add security guardrails to CLAUDE.md](#step-4-add-security-guardrails-to-claudemd)
+  - [Hooks](#hooks)
+  - [tmux Sessions](#tmux-sessions)
+  - [Git Worktrees](#git-worktrees)
+  - [Plugins (Optional)](#plugins-optional)
+  - [Resetting Settings](#resetting-settings)
+  - [Customization](#customization)
+    - [CLAUDE.md — What to Personalize](#claudemd--what-to-personalize)
+    - [Adding a new agent](#adding-a-new-agent)
+    - [Adding a new skill (auto-detected)](#adding-a-new-skill-auto-detected)
+    - [Adding a new slash command](#adding-a-new-slash-command)
+    - [Editing hooks](#editing-hooks)
+  - [Settings Hierarchy](#settings-hierarchy)
+  - [Repository Structure](#repository-structure)
+  - [Logging](#logging)
+  - [License](#license)
 
 ---
 
@@ -124,9 +141,12 @@ Reload your shell: `source ~/.zshenv`
 
 ### Step 4: Deploy to your project
 
+Run this in the folder where you have cloned this repo to. so ....../claude-ultra-template or so and the within there, run this 
+
 ```bash
 ./setup.sh /path/to/your/project
 ```
+(/path/to/your/project = where you want to use your agent)
 
 Done. Open Claude Code in that project and everything is ready.
 
@@ -355,6 +375,7 @@ Configure these globally in `~/.claude/mcp.json` so they're available in every p
 | **GitHub** | PRs, issues | "Create a PR for this branch" |
 | **Perplexity** | Web research | "Find the latest React 19 migration guide" |
 | **Puppeteer** | Browser automation | "Screenshot the login page" |
+| **Chrome DevTools** | Performance, debugging, browser control | "Check performance of the homepage" |
 | **Slack** | Notifications | "Post status update to #dev" |
 
 <details>
@@ -401,6 +422,10 @@ Add to `~/.claude/mcp.json`:
     "puppeteer": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
     },
     "slack": {
       "command": "npx",

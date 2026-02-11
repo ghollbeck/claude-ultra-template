@@ -76,6 +76,10 @@ else
   echo ">>> Perplexity — SKIPPED (set PERPLEXITY_API_KEY in ~/.zshenv)"
 fi
 
+# ---- Chrome DevTools (no auth needed) ----
+echo ">>> Chrome DevTools..."
+claude mcp add chrome-devtools $SCOPE_FLAG -- npx chrome-devtools-mcp@latest 2>/dev/null && echo "    OK" || echo "    (already exists or failed)"
+
 # ---- Slack ----
 if [ -n "$SLACK_BOT_TOKEN" ]; then
   echo ">>> Slack..."
