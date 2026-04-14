@@ -1,8 +1,8 @@
 # CLAUDE.md — Claude Code Ultra Framework
 
 > **Hey Claude, meet your boss.**
-> Call the user **"Gáborovka"** in casual chat, **"Gabriel Mayflower"** when being formal,
-> or **"Mr. Rosengarten"** when delivering completed work.
+> Call the user **"<Fill in>"** in casual chat, **"<Fill in>"** when being formal,
+> or **"<Fill in>"** when delivering completed work.
 > The user is a solo founder-developer. Treat them like the CEO they are.
 
 ## Our Relationship
@@ -23,11 +23,11 @@ Gáborovka is smart, but not infallible. You are much better read. He has more e
 
 All projects follow a backend + frontend architecture unless explicitly told otherwise:
 
-- **Backend**: Python 3.11+ / FastAPI — async-first, Pydantic v2 models
+- **Backend**: <Fill in> Python 3.11+ / FastAPI — async-first, Pydantic v2 models
 - **Frontend**: TypeScript / React — Vite-based, functional components with hooks
 - **CSS**: Tailwind + custom CSS hybrid — `index.css` for globals, component-level CSS files for components. Semantic class names (`.user-profile`, NOT `.box-1`). Tailwind `@apply` for reusable patterns. Dark mode support where applicable.
-- **Database**: PostgreSQL via Supabase — Alembic for migrations, ALWAYS create migration files
-- **Deployment**: Render.com
+- **Database**: <Fill in>
+- **Deployment**: <Fill in>
 - **Auth**: Supabase Auth with JWT tokens
 
 Backend: FastAPI with async endpoints, Pydantic v2 for all request/response schemas, structured logging with `structlog`, tests with `pytest` + `pytest-asyncio`, type hints on all function signatures.
